@@ -29,15 +29,4 @@ onMounted(() => {
     :setCurrentScreen="setCurrentScreen"
   />
   <Chat v-else-if="currentScreen === 'Chat' && apiKey" :apiKey="apiKey" />
-  <!-- <boxRenderable
-    v-else-if="currentScreen === 'Chat'"
-    flexDirection="column"
-    justifyContent="center"
-    alignItems="center"
-    :height="size.height"
-    :gap="1"
-    :live="true"
-  >
-    <textRenderable>{{ apiKey }}</textRenderable>
-  </boxRenderable> -->
 </template>
