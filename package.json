@@ -4,9 +4,10 @@
   "type": "module",
   "private": true,
   "bin": {
-    "my-tool": "./dist/index.js"
+    "gemini-cli-mini": "./dist/index.js"
   },
   "scripts": {
+    "build": "bun run build.ts",
     "start": "bun run build.ts && bun run dist/"
   },
   "devDependencies": {
