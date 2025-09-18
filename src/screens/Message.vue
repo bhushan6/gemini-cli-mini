@@ -1,12 +1,8 @@
 <script setup lang="ts">
-import {
-  type ModelMessage,
-  type TextPart,
-  type ToolCallPart,
-  type ToolResultPart,
-} from "ai";
+import { type ModelMessage, type TextPart, type ToolCallPart } from "ai";
 import { useTerminalDimensions } from "@opentui/vue";
 import { logToFile } from "../utils";
+import Spinner from "./Spinner.vue";
 
 interface MessageItemProps {
   message: ModelMessage;
@@ -34,6 +30,11 @@ const messagesContent: (
 messagesContent.forEach((c) => {
   c.type === "tool-call" && logToFile(JSON.stringify(c.output || {}));
 });
+
+const getPreview = (data: any) => {
+  const jsonString = JSON.stringify(data);
+  return jsonString.substring(0, 80) + "...";
+};
 </script>
 
 <template>
@@ -53,14 +54,38 @@ messagesContent.forEach((c) => {
     >
       {{ roleIcons[message.role] }}{{ message.role }}
     </textRenderable>
-    <boxRenderable
-      v-for="content in messagesContent"
-      :border="content.type === 'tool-call'"
-      :title="content.type == 'tool-call' ? 'Tool' : ''"
-    >
+    <boxRenderable v-for="content in messagesContent">
+      <boxRenderable
+        v-if="content.type === 'tool-call'"
+        :border="true"
+        :padding="1"
+        flexDirection="column"
+        :gap="1"
+        width="100%"
+      >
+        <boxRenderable :gap="1">
+          <Spinner v-if="!content.output" />
+          <textRenderable>
+            {{ content.output ? "🛠️" : "" }} Tool: {{ content.toolName }}
+          </textRenderable>
+        </boxRenderable>
+        <boxRenderable flexDirection="column">
+          <textRenderable>Input: </textRenderable>
+          <textRenderable>
+            {{ content.input ? getPreview(content.input) : "No Input" }}
+          </textRenderable>
+        </boxRenderable>
+        <boxRenderable v-if="content.output" flexDirection="column">
+          <textRenderable>Output: </textRenderable>
+          <textRenderable>
+            {{ getPreview(content.output) }}
+          </textRenderable>
+        </boxRenderable>
+      </boxRenderable>
       <textRenderable
-        :key="content.type === 'tool-call' ? content.toolCallId : content.id"
-        :content="content.type === 'text' ? content.text : content.toolName"
+        v-else
+        :key="content.id"
+        :content="content.text"
         :marginBottom="1"
       />
     </boxRenderable>
