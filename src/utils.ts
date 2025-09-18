@@ -320,3 +320,24 @@ export const tools = {
   editFile: editFileTool,
   listFiles: listFilesTool,
 } as const;
+
+export function logToFile(message: string, filename: string = "app.log"): void {
+  const fs = require("fs");
+  const path = require("path");
+
+  try {
+    const timestamp = new Date().toISOString();
+    const logEntry = `[${timestamp}] ${message}\n`;
+
+    // Ensure the directory exists
+    const dir = path.dirname(filename);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    // Append to log file
+    fs.appendFileSync(filename, logEntry, "utf8");
+  } catch (error) {
+    console.error("Failed to write to log file:", error);
+  }
+}

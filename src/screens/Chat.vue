@@ -12,7 +12,7 @@ import {
 } from "ai";
 import { ref } from "vue";
 import Message from "./Message.vue";
-import { systemPrompt, tools } from "../utils";
+import { logToFile, systemPrompt, tools } from "../utils";
 
 const props = defineProps({
   apiKey: {
@@ -55,7 +55,6 @@ const onSubmit = async (message: string) => {
   };
 
   const resetLastMessage = () => {
-    // logToFile("pushed last message");
     messagesArray.value.pop();
     messagesArray.value.push(assistantModelMessage);
   };
@@ -112,16 +111,8 @@ const onSubmit = async (message: string) => {
         return c;
       });
       resetLastMessage();
-    } else if (chunk.type === "text-end") {
-      // nothing to do here since text-delta gives all the text
     } else if (chunk.type === "error") {
-      //   logToFile(chunk.errorText);
-    } else if (chunk.type === "finish") {
-      //   const result = await stream.text;
-      //   messagesArray.value.push({
-      //     role: "assistant",
-      //     content: result,
-      //   });
+      logToFile(chunk.errorText);
     } else if (chunk.type === "start") {
       messagesArray.value.push(assistantModelMessage);
     } else {
@@ -154,7 +145,7 @@ const onChange = (value: string) => {
         :live="true"
         :scrollbarOptions="{ visible: true }"
         :contentOptions="{
-          //   gap: 1,
+          gap: 1,
         }"
       >
         <Message
