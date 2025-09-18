@@ -80,32 +80,34 @@ const onSubmit = async (message: string) => {
       });
       resetLastMessage();
     } else if (chunk.type === "tool-output-available") {
-      let wasToolAvailable = false;
       assistantModelMessage.content = assistantModelMessage.content.map((c) => {
         if (c.type === "tool-call" && c.toolCallId === chunk.toolCallId) {
-          wasToolAvailable = true;
           return { ...c, output: chunk.output };
         }
         return c;
       });
-      if (!wasToolAvailable) {
-        assistantModelMessage.content.push({
-          type: "tool-call",
-          toolCallId: chunk.toolCallId,
-          output: chunk.output,
-        });
-      }
       resetLastMessage();
     } else if (chunk.type === "text-start") {
-      const textContent: TextPart = {
-        type: "text",
-        text: "",
-      };
-      assistantModelMessage.content.push(textContent);
+      let isTextPartAvailable = false;
+      assistantModelMessage.content = assistantModelMessage.content.map((c) => {
+        if (c.type === "text" && c.id === chunk.id) {
+          isTextPartAvailable = true;
+          return { ...c, text: `${c.text}` };
+        }
+        return c;
+      });
+      if (!isTextPartAvailable) {
+        const textContent: TextPart & { id: string } = {
+          type: "text",
+          text: "",
+          id: chunk.id,
+        };
+        assistantModelMessage.content.push(textContent);
+      }
       resetLastMessage();
     } else if (chunk.type === "text-delta") {
       assistantModelMessage.content = assistantModelMessage.content.map((c) => {
-        if (c.type === "text") {
+        if (c.type === "text" && c.id === chunk.id) {
           return { ...c, text: `${c.text}${chunk.delta}` };
         }
         return c;
@@ -119,6 +121,7 @@ const onSubmit = async (message: string) => {
       //unhandled type for now
       //   logToFile(`${chunk.type} is not handled`);
     }
+    logToFile(JSON.stringify(chunk));
   }
 
   isGenerating.value = false;

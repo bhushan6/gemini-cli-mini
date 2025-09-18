@@ -6,6 +6,7 @@ import {
   type ToolResultPart,
 } from "ai";
 import { useTerminalDimensions } from "@opentui/vue";
+import { logToFile } from "../utils";
 
 interface MessageItemProps {
   message: ModelMessage;
@@ -22,10 +23,17 @@ const roleIcons: Record<ModelMessage["role"], string> = {
 
 const size = useTerminalDimensions();
 
-const messagesContent: (TextPart | ToolCallPart | ToolResultPart)[] =
+const messagesContent: (
+  | (TextPart & { id: string })
+  | (ToolCallPart & { output: unknown })
+)[] =
   typeof props.message.content === "string"
     ? [{ type: "text", text: props.message.content }]
     : props.message.content;
+
+messagesContent.forEach((c) => {
+  c.type === "tool-call" && logToFile(JSON.stringify(c.output || {}));
+});
 </script>
 
 <template>
@@ -39,15 +47,22 @@ const messagesContent: (TextPart | ToolCallPart | ToolResultPart)[] =
     :backgroundColor="message.role === 'user' ? '#001100' : '#000022'"
     :width="size.width"
   >
-    <textRenderable :fg="message.role === 'user' ? '#00ff00' : '#0088ff'">
+    <textRenderable
+      :fg="message.role === 'user' ? '#00ff00' : '#0088ff'"
+      :marginBottom="1"
+    >
       {{ roleIcons[message.role] }}{{ message.role }}
     </textRenderable>
-    <textRenderable
-      v-for="(content, index) in messagesContent"
-      :key="index"
-      :content="
-        content.type === 'text' ? content.text : content.toolName || '><'
-      "
-    />
+    <boxRenderable
+      v-for="content in messagesContent"
+      :border="content.type === 'tool-call'"
+      :title="content.type == 'tool-call' ? 'Tool' : ''"
+    >
+      <textRenderable
+        :key="content.type === 'tool-call' ? content.toolCallId : content.id"
+        :content="content.type === 'text' ? content.text : content.toolName"
+        :marginBottom="1"
+      />
+    </boxRenderable>
   </boxRenderable>
 </template>
